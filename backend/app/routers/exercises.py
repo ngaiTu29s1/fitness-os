@@ -1,5 +1,5 @@
 import asyncio
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 
@@ -82,10 +82,10 @@ async def delete_exercise(id: int, db: AsyncSession = Depends(get_db)):
     }
 
 @router.post("/{id}/enrich")
-async def enrich_exercise(id: int, db: AsyncSession = Depends(get_db)):
+async def enrich_exercise(id: int, force: bool = Query(False), db: AsyncSession = Depends(get_db)):
     service = EnrichmentService(db)
     try:
-        exercise = await service.enrich_exercise(id)
+        exercise = await service.enrich_exercise(id, force=force)
         return {
             "data": ExerciseResponse.model_validate(exercise),
             "message": "Exercise metadata enriched successfully",

@@ -250,6 +250,27 @@ document.addEventListener('alpine:init', () => {
     },
 
     async enrichExercise(id) {
+      return this._doEnrich(id, false);
+    },
+
+    async forceEnrich(id) {
+      return this._doEnrich(id, true);
+    },
+
+    async reEnrichExercise(id) {
+      if (this.enrichingIds.includes(id)) return;
+
+      const lang = document.querySelector('[x-data="app"]').__x.$data.lang;
+      const msg = lang === 'vi'
+        ? 'Bạn có chắc muốn enrich lại bài tập này? Dữ liệu hiện tại sẽ bị ghi đè.'
+        : 'Re-enrich this exercise? Existing data will be overwritten.';
+
+      if (!confirm(msg)) return;
+
+      return this._doEnrich(id, true);
+    },
+
+    async _doEnrich(id, force) {
       if (this.enrichingIds.includes(id)) return;
       this.enrichingIds.push(id);
 
@@ -257,7 +278,8 @@ document.addEventListener('alpine:init', () => {
         detail: { message: 'Starting AI enrichment...', type: 'info' }
       }));
       try {
-        const res = await api.post(`/exercises/${id}/enrich`);
+        const url = force ? `/exercises/${id}/enrich?force=true` : `/exercises/${id}/enrich`;
+        const res = await api.post(url);
         // Update local item
         const index = this.items.findIndex(ex => ex.id === id);
         if (index !== -1) {
@@ -282,19 +304,6 @@ document.addEventListener('alpine:init', () => {
       } finally {
         this.enrichingIds = this.enrichingIds.filter(x => x !== id);
       }
-    },
-
-    async reEnrichExercise(id) {
-      if (this.enrichingIds.includes(id)) return;
-
-      const lang = document.querySelector('[x-data="app"]').__x.$data.lang;
-      const msg = lang === 'vi'
-        ? 'Bạn có chắc muốn enrich lại bài tập này? Dữ liệu hiện tại sẽ bị ghi đè.'
-        : 'Re-enrich this exercise? Existing data will be overwritten.';
-
-      if (!confirm(msg)) return;
-
-      return this.enrichExercise(id);
     },
 
     async enrichAll() {

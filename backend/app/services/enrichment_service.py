@@ -50,11 +50,12 @@ class EnrichmentService:
 
         return base_val, en_val, vi_val
 
-    async def enrich_exercise(self, exercise_id: int) -> ExerciseMaster:
+    async def enrich_exercise(self, exercise_id: int, force: bool = False) -> ExerciseMaster:
         """
         Trigger AI enrichment via n8n webhook.
         Uses EnrichmentCache in Postgres to store translation metadata to optimize token usage.
         If n8n is unconfigured or returns an error, falls back to a smart mock.
+        Set force=True to skip cache and overwrite existing fields (re-enrich).
         """
         # Fetch exercise with eager loaded pool relation to prevent MissingGreenlet errors during Pydantic validation
         query = select(ExerciseMaster).where(ExerciseMaster.id == exercise_id).options(joinedload(ExerciseMaster.pool))
@@ -66,9 +67,11 @@ class EnrichmentService:
 
         # Check in persistent database cache first using lowercased English name
         cache_key = exercise.name_eng.strip().lower()
-        cache_entry = await self.db.scalar(
-            select(EnrichmentCache).where(EnrichmentCache.key == cache_key)
-        )
+        cache_entry = None
+        if not force:
+            cache_entry = await self.db.scalar(
+                select(EnrichmentCache).where(EnrichmentCache.key == cache_key)
+            )
         if cache_entry:
             enriched_data = cache_entry.data
         else:
@@ -111,11 +114,21 @@ class EnrichmentService:
                         if response.status_code == 200:
                             res_json = response.json()
                             if isinstance(res_json, list) and len(res_json) > 0:
-                                enriched_data = res_json[0]
+                                raw = res_json[0]
                             elif isinstance(res_json, dict):
-                                enriched_data = res_json
+                                raw = res_json
                             else:
-                                enriched_data = {}
+                                raw = {}
+
+                            # n8n wraps result in chat completion: extract content field
+                            if isinstance(raw, dict) and "choices" in raw:
+                                try:
+                                    content_str = raw["choices"][0]["message"]["content"]
+                                    enriched_data = json.loads(content_str)
+                                except (KeyError, IndexError, json.JSONDecodeError):
+                                    enriched_data = raw
+                            else:
+                                enriched_data = raw
                             
                             # Cache successful translation metadata
                             if enriched_data and "name_vie" in enriched_data:
@@ -153,8 +166,8 @@ class EnrichmentService:
                 from backend.app.services.pool_service import infer_tracking_type
                 exercise.tracking_type = infer_tracking_type(pool.equipment, pool.category)
 
-        # 2. Update empty exercise fields with AI enriched data
-        if not exercise.name_vie and enriched_data and "name_vie" in enriched_data:
+        # 2. Update exercise fields with AI enriched data (overwrite on force)
+        if enriched_data and "name_vie" in enriched_data and (force or not exercise.name_vie):
             exercise.name_vie = enriched_data["name_vie"]
             
         # Resolve bilingual fields

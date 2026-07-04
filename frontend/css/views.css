@@ -30,17 +30,25 @@
 
 .filter-row {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: var(--space-sm);
-  overflow-x: auto;
-  white-space: nowrap;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
+  max-height: 40px;
+  transition: max-height var(--transition-normal);
   padding-bottom: var(--space-xs);
-  scrollbar-width: none; /* Firefox */
 }
 
-.filter-row::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
+.filter-row.expanded {
+  max-height: 600px;
+}
+
+.filter-row__toggle {
+  font-size: var(--font-xs);
+  color: var(--accent-primary);
+  cursor: pointer;
+  margin-left: var(--space-sm);
+  white-space: nowrap;
+  align-self: center;
 }
 
 .exercise-card {

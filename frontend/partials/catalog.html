@@ -22,16 +22,20 @@
             <input type="text" class="form-control search-input" placeholder="Search exercises by name or muscle..." x-model="$store.exercises.search">
         </div>
 
-        <!-- Tag Filters (Horizontal scroll) -->
-        <div class="filter-row">
-            <span class="chip" :class="!$store.exercises.selectedTag ? 'chip--active' : ''" @click="$store.exercises.selectedTag = ''; $store.exercises.selectedMuscle = '';">All</span>
-            
-            <template x-for="tag in $store.exercises.activeTags" :key="tag.value">
-                <span class="chip" 
-                      :class="$store.exercises.selectedTag === tag.value ? 'chip--active chip--' + tag.value.replace('_', '-') : ''" 
-                      @click="$store.exercises.selectedTag = ($store.exercises.selectedTag === tag.value ? '' : tag.value)" 
-                      x-text="tag.label"></span>
-            </template>
+        <!-- Tag Filters (wrap + collapse) -->
+        <div x-data="{ expanded: false }">
+            <div class="filter-row" :class="expanded ? 'expanded' : ''">
+                <span class="chip" :class="!$store.exercises.selectedTag ? 'chip--active' : ''" @click="$store.exercises.selectedTag = ''; $store.exercises.selectedMuscle = '';">All</span>
+                
+                <template x-for="tag in $store.exercises.activeTags" :key="tag.value">
+                    <span class="chip" 
+                          :class="$store.exercises.selectedTag === tag.value ? 'chip--active chip--' + tag.value.replace('_', '-') : ''" 
+                          @click="$store.exercises.selectedTag = ($store.exercises.selectedTag === tag.value ? '' : tag.value)" 
+                          x-text="tag.label"></span>
+                </template>
+
+                <span class="filter-row__toggle" x-show="$store.exercises.activeTags.length > 8" @click="expanded = !expanded" x-text="expanded ? (lang === 'vi' ? 'Thu gọn ▲' : 'Show less ▲') : (lang === 'vi' ? 'Xem thêm ▼' : 'Show more ▼')"></span>
+            </div>
         </div>
     </div>
 

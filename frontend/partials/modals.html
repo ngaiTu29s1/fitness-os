@@ -356,14 +356,17 @@
             <!-- Candidate List -->
             <div class="flex flex-column gap-sm" style="max-height: 250px; overflow-y: auto; padding-right: 4px;">
                 <template x-for="ex in $store.workout.swapFilteredExercises" :key="ex.id">
-                    <div class="flex justify-between align-center p-sm card cursor-pointer"
-                         style="padding: 12px; margin: 0;"
+                    <div class="search-result-item cursor-pointer"
                          @click="$store.workout.swapSessionExerciseManually(ex)">
-                        <div>
-                            <strong x-text="lang === 'vi' ? (ex.name_vie || ex.name_eng) : ex.name_eng"></strong>
-                            <div class="text-secondary" style="font-size: var(--font-xs); margin-top: 2px;">
-                                <span class="badge badge-accent" style="font-size: 9px;" x-text="ex.primary_muscle || 'General'"></span>
-                                <!-- Highlight if same muscle -->
+                        <img class="search-result-thumb" :src="$store.pool.getImageUrl(ex)"
+                             loading="lazy" @error="$el.style.display='none'"
+                             x-show="$store.pool.getImageUrl(ex)">
+                        <div class="search-result-placeholder" x-show="!$store.pool.getImageUrl(ex)"
+                             x-text="ex.name_eng ? ex.name_eng.charAt(0).toUpperCase() : ''"></div>
+                        <div class="search-result-info">
+                            <div class="search-result-name" x-text="lang === 'vi' ? (ex.name_vie || ex.name_eng) : ex.name_eng"></div>
+                            <div style="font-size: var(--font-xs); margin-top: 2px;">
+                                <span class="search-result-muscle" x-text="ex.primary_muscle || 'General'"></span>
                                 <template x-if="$store.workout.swappingSessionItem && $store.workout.swappingSessionItem.exercise.primary_muscle === ex.primary_muscle">
                                     <span style="color: var(--accent-primary); font-size: 10px; margin-left: var(--space-xs);" x-text="lang === 'vi' ? '• cùng nhóm cơ' : '• same muscle'"></span>
                                 </template>

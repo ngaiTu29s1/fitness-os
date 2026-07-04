@@ -1,9 +1,9 @@
 // Import stores to execute and register them with Alpine
-import './stores/exercise-store.js?v=6';
-import './stores/calendar-store.js?v=6';
-import './stores/workout-store.js?v=6';
-import './stores/stats-store.js?v=6';
-import './stores/pool-store.js?v=6';
+import './stores/exercise-store.js?v=7';
+import './stores/calendar-store.js?v=7';
+import './stores/workout-store.js?v=7';
+import './stores/stats-store.js?v=7';
+import './stores/pool-store.js?v=7';
 
 document.addEventListener('alpine:init', () => {
   // Custom Confirm Dialog Store
@@ -102,6 +102,11 @@ document.addEventListener('alpine:init', () => {
         const hash = window.location.hash.replace('#', '') || 'session';
         const allowedViews = ['catalog', 'calendar', 'session', 'stats'];
         const view = allowedViews.includes(hash) ? hash : 'session';
+        
+        // Auto-save workout logs before leaving session view
+        if (this.activeView === 'session' && view !== 'session') {
+          Alpine.store('workout').autoSaveAll();
+        }
         
         this.activeView = view;
         this.updateTitle(view);

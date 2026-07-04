@@ -203,12 +203,37 @@ document.addEventListener('alpine:init', () => {
       };
     },
 
+    autoSaveAll() {
+      this.sessionExercises.forEach(item => {
+        if (!item.is_completed && item.tracking_data && item.tracking_data.length > 0) {
+          this.saveLog(item);
+        }
+      });
+    },
+
+    goToday() {
+      this.selectedDate = formatDateLocal(new Date());
+      this.activeExerciseId = null;
+      this.fetchSession();
+    },
+
     changeDate(offset) {
+      this.autoSaveAll();
       const date = new Date(this.selectedDate);
       date.setDate(date.getDate() + offset);
       this.selectedDate = formatDateLocal(date);
       this.activeExerciseId = null;
       this.fetchSession();
+    },
+
+    quickAddSet(item, kg, rep) {
+      kg = parseFloat(kg) || 0;
+      rep = parseInt(rep) || 0;
+      if (!kg || !rep) return;
+      if (!item.tracking_data) item.tracking_data = [];
+      const newSet = { set: item.tracking_data.length + 1, kg, rep };
+      item.tracking_data = [...item.tracking_data, newSet];
+      this.saveLog(item);
     },
 
     addSet(sessionItem) {
@@ -736,6 +761,11 @@ document.addEventListener('alpine:init', () => {
     },
 
     async removeSessionExercise(sessionItem) {
+      // Auto-save before removing if has unsaved tracking data
+      if (!sessionItem.isLogged && sessionItem.tracking_data && sessionItem.tracking_data.length > 0) {
+        await this.saveLog(sessionItem);
+      }
+
       const appEl = document.querySelector('[x-data="app"]');
       const lang = appEl && window.Alpine ? window.Alpine.evaluate(appEl, 'lang') : 'vi';
 

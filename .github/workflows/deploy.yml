@@ -34,7 +34,9 @@ jobs:
 
       - name: Start services and run pytest
         run: |
-          # Boot up services via dev compose
+          # DOCKER_BUILDKIT=1 enables parallel build + layer caching
+          export DOCKER_BUILDKIT=1
+          export COMPOSE_DOCKER_CLI_BUILD=1
           docker compose up --build -d fitness-db fitness-backend
           
           # Wait for PostgreSQL container health check to succeed (max 30s)

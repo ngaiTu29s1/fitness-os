@@ -10,17 +10,13 @@ ENV APP_VERSION=${APP_VERSION:-0.0.0-dev}
 ENV GIT_COMMIT=${GIT_COMMIT:-unknown}
 ENV BUILD_TIME=${BUILD_TIME:-unknown}
 
-# Install dependencies
+# Install dependencies (layer cached khi requirements.txt không đổi)
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy VERSION file (fallback for APP_VERSION)
-COPY VERSION ./
-
-# Copy backend code
+# Copy all app code + VERSION in one layer (maximizes cache hit)
 COPY backend/ ./backend/
-
-# Copy frontend for static serving
 COPY frontend/ ./frontend/
+COPY VERSION ./
 
 CMD alembic -c backend/alembic.ini upgrade head && uvicorn backend.app.main:app --host 0.0.0.0 --port 8000

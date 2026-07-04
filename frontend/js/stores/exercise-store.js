@@ -95,9 +95,16 @@ document.addEventListener('alpine:init', () => {
       this.tagsList = Array.from(tags).sort();
     },
 
+    get allTags() {
+      return this.tagsList.map(t => {
+        const value = t.toLowerCase().replace(/ /g, '_');
+        return { value, label: t };
+      });
+    },
+
+    // deprecated: keep for backward compat
     get activeTags() {
-      const list = this.tagsList.map(t => t.toLowerCase().replace(' ', '_'));
-      return this.routineTags.filter(tag => list.includes(tag.value));
+      return this.allTags;
     },
 
     get filteredItems() {

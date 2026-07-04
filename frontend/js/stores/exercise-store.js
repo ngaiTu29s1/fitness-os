@@ -284,18 +284,15 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    async reEnrichExercise(id, event) {
-      if (event) event.stopPropagation();
+    async reEnrichExercise(id) {
       if (this.enrichingIds.includes(id)) return;
 
       const lang = document.querySelector('[x-data="app"]').__x.$data.lang;
       const msg = lang === 'vi'
         ? 'Bạn có chắc muốn enrich lại bài tập này? Dữ liệu hiện tại sẽ bị ghi đè.'
         : 'Re-enrich this exercise? Existing data will be overwritten.';
-      const title = lang === 'vi' ? 'Xác nhận Enrich lại' : 'Confirm Re-enrich';
 
-      const confirmed = await window.customConfirm(msg, title);
-      if (!confirmed) return;
+      if (!confirm(msg)) return;
 
       return this.enrichExercise(id);
     },

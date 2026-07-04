@@ -80,14 +80,6 @@
                              <span class="badge" :class="getRoutineTagClass(tag)" x-text="tag"></span>
                         </template>
                     </div>
-
-                    <button class="re-enrich-btn"
-                            x-show="ex.name_vie && ex.name_vie !== ''"
-                            :disabled="$store.exercises.enrichingIds.includes(ex.id)"
-                            @click.stop="$store.exercises.reEnrichExercise(ex.id, $event)"
-                            :title="lang === 'vi' ? 'Enrich lại bài tập' : 'Re-enrich exercise'">
-                        🔄
-                    </button>
                 </div>
             </div>
         </template>

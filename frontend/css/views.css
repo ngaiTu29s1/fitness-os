@@ -785,6 +785,37 @@
   padding-top: var(--space-xs);
 }
 
+/* Re-enrich button in card */
+.re-enrich-btn {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-round);
+  border: 1px solid var(--border-glass);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  color: var(--text-secondary);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.re-enrich-btn:hover {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.re-enrich-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* Enrichment overlay inside exercise card */
 .exercise-card--enriching {
   pointer-events: none;

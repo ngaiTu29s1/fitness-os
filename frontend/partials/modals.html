@@ -125,7 +125,7 @@
                         <button type="button" class="btn btn-secondary"
                                 x-show="$store.exercises.editingExercise && $store.exercises.editingExercise.name_vie"
                                 :disabled="$store.exercises.enrichingIds.includes($store.exercises.editingExercise && $store.exercises.editingExercise.id)"
-                                @click="$store.exercises.reEnrichExercise($store.exercises.editingExercise.id)">
+                                @click="if (confirm(lang === 'vi' ? 'Bạn có chắc muốn enrich lại bài tập này? Dữ liệu hiện tại sẽ bị ghi đè.' : 'Re-enrich this exercise? Existing data will be overwritten.')) { $store.exercises.enrichExercise($store.exercises.editingExercise.id) }">
                             🔄 <span x-text="lang === 'vi' ? 'Enrich lại' : 'Re-enrich'"></span>
                         </button>
                     </div>

@@ -21,27 +21,36 @@ class EnrichmentService:
         exercise: ExerciseMaster,
         base_field: str,
         enriched_data: dict,
-        default: str
+        default: str,
+        force: bool = False
     ) -> tuple:
         """
         Resolve fallback logic for bilingual fields (instructions, pro_tips).
+        When force=True, prefer enriched_data over existing values.
         """
         val = getattr(exercise, base_field, None)
         val_en = getattr(exercise, f"{base_field}_en", None)
         val_vi = getattr(exercise, f"{base_field}_vi", None)
 
-        # 1. Inherit from pool if it exists
-        if exercise.pool:
+        # 1. Inherit from pool if it exists (skip when force)
+        if not force and exercise.pool:
             if not val_en:
                 val_en = getattr(exercise.pool, f"{base_field}_en", None)
             if not val_vi:
                 val_vi = getattr(exercise.pool, f"{base_field}_vi", None)
 
-        # 2. Inherit from enriched_data
-        if not val_en and enriched_data:
-            val_en = enriched_data.get(f"{base_field}_en")
-        if not val_vi and enriched_data:
-            val_vi = enriched_data.get(f"{base_field}_vi") or enriched_data.get(base_field)
+        # 2. Inherit from enriched_data (force = overwrite existing)
+        if enriched_data:
+            new_en = enriched_data.get(f"{base_field}_en")
+            new_vi = enriched_data.get(f"{base_field}_vi") or enriched_data.get(base_field)
+            if force:
+                val_en = new_en or val_en
+                val_vi = new_vi or val_vi
+            else:
+                if not val_en:
+                    val_en = new_en
+                if not val_vi:
+                    val_vi = new_vi
 
         # 3. Apply general fallback rules
         base_val = val_vi or val or val_en
@@ -152,7 +161,8 @@ class EnrichmentService:
             enriched_data = self._generate_mock_metadata(exercise.name_eng)
 
         # 1. Inherit from pool first if this is a pool-linked exercise (non-bilingual fields)
-        if exercise.pool:
+        # Skip pool inheritance when force=True (let n8n data take full control)
+        if not force and exercise.pool:
             pool = exercise.pool
             if not exercise.image_url and pool.image_path:
                 exercise.image_url = f"/pool/{pool.image_path}"
@@ -172,25 +182,25 @@ class EnrichmentService:
             
         # Resolve bilingual fields
         exercise.instructions, exercise.instructions_en, exercise.instructions_vi = self._resolve_bilingual_field(
-            exercise, "instructions", enriched_data, "Perform the exercise with correct form."
+            exercise, "instructions", enriched_data, "Perform the exercise with correct form.", force
         )
 
         exercise.pro_tips, exercise.pro_tips_en, exercise.pro_tips_vi = self._resolve_bilingual_field(
-            exercise, "pro_tips", enriched_data, "Focus on form and safety."
+            exercise, "pro_tips", enriched_data, "Focus on form and safety.", force
         )
 
-        if not exercise.video_url and enriched_data and "video_url" in enriched_data:
+        if enriched_data and "video_url" in enriched_data and (force or not exercise.video_url):
             exercise.video_url = enriched_data["video_url"]
-        if not exercise.image_url and enriched_data and "image_url" in enriched_data:
+        if enriched_data and "image_url" in enriched_data and (force or not exercise.image_url):
             exercise.image_url = enriched_data["image_url"]
 
-        if not exercise.tracking_type and enriched_data and "tracking_type" in enriched_data:
+        if enriched_data and "tracking_type" in enriched_data and (force or not exercise.tracking_type):
             exercise.tracking_type = enriched_data["tracking_type"]
-        if not exercise.primary_muscle and enriched_data and "primary_muscle" in enriched_data:
+        if enriched_data and "primary_muscle" in enriched_data and (force or not exercise.primary_muscle):
             exercise.primary_muscle = enriched_data["primary_muscle"]
-        if (not exercise.secondary_muscle) and enriched_data and "secondary_muscle" in enriched_data:
+        if enriched_data and "secondary_muscle" in enriched_data and (force or not exercise.secondary_muscle):
             exercise.secondary_muscle = enriched_data["secondary_muscle"]
-        if (not exercise.tags) and enriched_data and "tags" in enriched_data:
+        if enriched_data and "tags" in enriched_data and (force or not exercise.tags):
             exercise.tags = enriched_data["tags"]
 
         # 3. Write back instructions_vi to the pool table if it is linked, to enrich the pool itself
